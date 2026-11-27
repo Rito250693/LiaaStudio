@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-liaa-blue: #0845ff;
+  --color-liaa-cyan: #00d4ff;
+  --color-liaa-sky: #029be6;
+  --color-liaa-violet: #6d28d9;
+  --color-liaa-void: #050814;
+  --color-liaa-surface: #0b1124;
+  --color-liaa-card: #101933;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* Prevent Chrome/Edge autofill from turning inputs white-on-white in dark mode */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill,
+  .dark select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #0f1936 inset !important;
+    -webkit-text-fill-color: #f8fafc !important;
+    caret-color: #22d3ee !important;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
+
+/* Subtle tech grid background utility */
+.bg-tech-grid {
+  background-image:
+    linear-gradient(to right, rgba(2, 155, 230, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(2, 155, 230, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.dark .bg-tech-grid {
+  background-image:
+    linear-gradient(to right, rgba(0, 212, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 212, 255, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Glowing emblem halo animation */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-slow,
+  .animate-float-gentle {
+    animation: none;
+  }
+}

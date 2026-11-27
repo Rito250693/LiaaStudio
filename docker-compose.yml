@@ -1,0 +1,34 @@
+services:
+  liaa-web:
+    container_name: liaa-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Usa "runner" (default) en PC/VPS x64 o arm64.
+      # En ASUS Tinker Board S (armhf 32 bits / 2 GB RAM), levanta con:
+      #   LIAA_DOCKER_TARGET=prebuilt docker compose up -d --build
+      target: ${LIAA_DOCKER_TARGET:-runner}
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      LIAA_ENV: production
+      PORT: 3000
+      NODE_OPTIONS: --max-old-space-size=512
+    ports:
+      # Expuesto solo en loopback para que Nginx del host haga proxy reverso (puerto 80/443).
+      # Si NO usas Nginx delante, cambia a "3000:3000".
+      - "127.0.0.1:3000:3000"
+    volumes:
+      # Persistencia de la base de datos SQLite (WAL) y fotos subidas desde LIAA Studio
+      - ./server/data:/app/server/data
+      - ./public/images/uploads:/app/public/images/uploads
+    mem_limit: 768m
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

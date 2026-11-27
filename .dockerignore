@@ -1,0 +1,13 @@
+node_modules
+.git
+.gitignore
+backups
+.env
+.env.local
+.env.production
+.env.development
+server/data
+public/images/uploads
+iniciar-liaa.bat
+tsconfig.tsbuildinfo
+*.log
