@@ -49,6 +49,11 @@ npm run dev
      ```bash
      LIAA_DOCKER_TARGET=prebuilt docker compose up -d --build
      ```
+4. **Obtener las credenciales iniciales del Superadministrador (primer arranque):**
+   Si dejaste `LIAA_ADMIN_PASS` vacío en `.env.production`, el servidor genera automáticamente una contraseña aleatoria segura de 18 caracteres y la imprime **una única vez** al arrancar (con cambio obligatorio al iniciar sesión):
+   ```bash
+   docker compose logs liaa-web
+   ```
 
 ### Opción 2: Node.js + `systemd` + Nginx (sin Docker)
 

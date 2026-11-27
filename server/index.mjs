@@ -2,6 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { APP_ENV, PATHS, SECURITY_CONFIG } from './config.mjs';
+import { getDb } from './db.mjs';
 import { handleCmsApi } from './cmsMiddleware.mjs';
 
 const PORT = Number(process.env.PORT || 3000);
@@ -106,5 +107,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  // Initialize SQLite immediately on startup so first-boot Superadmin credentials appear right away in Docker logs
+  getDb();
   console.log(`LIAA CMS [${APP_ENV.toUpperCase()}] activo en http://localhost:${PORT}`);
 });

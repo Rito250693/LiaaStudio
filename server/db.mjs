@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { EXTERNAL_SECRETS, PATHS } from './config.mjs';
+import { APP_ENV, EXTERNAL_SECRETS, PATHS } from './config.mjs';
 import { SYSTEM_ROLES } from './permissions.mjs';
 import { encryptSecret } from './cryptoVault.mjs';
 
@@ -173,6 +173,27 @@ export function closeDbForTests() {
   }
 }
 
+function generateRandomBootstrapPassword(length = 18) {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const digits = '23456789';
+  const symbols = '!@#$%&*-_+=';
+  const all = upper + lower + digits + symbols;
+  const pick = (chars) => chars[crypto.randomInt(0, chars.length)];
+
+  // Guarantee at least one character from each category
+  const chars = [pick(upper), pick(lower), pick(digits), pick(symbols)];
+  while (chars.length < length) {
+    chars.push(pick(all));
+  }
+  // Fisher-Yates shuffle using crypto.randomInt
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
 function seedInitialState(db) {
   const now = new Date().toISOString();
 
@@ -197,15 +218,30 @@ function seedInitialState(db) {
   // Create initial superadmin only if users table is completely empty
   const userCount = db.prepare('SELECT COUNT(*) AS cnt FROM users').get().cnt;
   if (userCount === 0) {
-    const initialUser = process.env.LIAA_ADMIN_USER || 'admin';
-    const initialPass = process.env.LIAA_ADMIN_PASS || 'LiaaUaz2026!';
+    const initialUser = (process.env.LIAA_ADMIN_USER || 'admin').trim() || 'admin';
+    const envPass = typeof process.env.LIAA_ADMIN_PASS === 'string' ? process.env.LIAA_ADMIN_PASS.trim() : '';
+    const wasGenerated = envPass.length < 10;
+    const initialPass = wasGenerated ? generateRandomBootstrapPassword(18) : envPass;
+    const mustChange = wasGenerated ? 1 : 0;
     const { salt, hash } = hashPassword(initialPass);
     db.prepare(`
       INSERT INTO users(
         id, username, email, display_name, role_id, custom_permissions_json,
         avatar, salt, password_hash, status, must_change_password, totp_enabled, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, 'role-superadmin', '{}', '/images/liaa-emblem.png', ?, ?, 'active', 0, 0, ?, ?)
-    `).run('usr-superadmin-1', initialUser, '', 'Superadministrador LIAA', salt, hash, now, now);
+      ) VALUES (?, ?, ?, ?, 'role-superadmin', '{}', '/images/liaa-emblem.png', ?, ?, 'active', ?, 0, ?, ?)
+    `).run('usr-superadmin-1', initialUser, '', 'Superadministrador LIAA', salt, hash, mustChange, now, now);
+
+    if (wasGenerated && APP_ENV !== 'test') {
+      console.log('');
+      console.log('====================================================================');
+      console.log('[LIAA STUDIO] SUPERADMINISTRADOR INICIAL GENERADO AUTOMATICAMENTE');
+      console.log(`  Usuario    : ${initialUser}`);
+      console.log(`  Contrasena : ${initialPass}`);
+      console.log('  Aviso      : El sistema pedira cambiar esta clave al iniciar sesion.');
+      console.log('               Esta clave solo se muestra una vez en el primer arranque.');
+      console.log('====================================================================');
+      console.log('');
+    }
   }
 
   // Seed site_content into SQLite from public/content.json if empty
